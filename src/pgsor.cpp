@@ -8,40 +8,46 @@
 #include <vector>
 #include <fstream>
 #include <cassert>
+#include "grid.hpp"
+
 using namespace std;
 
 
 int main(int argc, char* argv[])
 {
-	std::vector<double> N{ 40 };
+  std::vector<double> N{ 40, 50 };
 	for (int L = 0; L < N.size(); L++)
 	{
-		double p = 0.0, q = 0.0;
-		std::vector<double> x(N[L], 0.0);
-		std::vector<double> y(N[L], 0.0);
-		p = double(2 * M_PI) / double(N[L] - 1);
+	  //double p = 0.0, q = 0.0;
+		std::vector<double> x;
+		std::vector<double> y;
+		grid A(N[L], 2*M_PI, 0, 2*M_PI, 0);
+
+		x = A.GetXGrid();
+		y = A.GetYGrid();
+
+	        
+		/*p = double(2 * M_PI) / double(N[L] - 1);
 		q = double(2) / double(N[L] - 1);
 
 		for (int i = 1; i < x.size(); i++)
 		{
 			x[i] = x[i - 1] + p;
 			y[i] = y[i - 1] + q;
-		}
-		for (int i = 0; i < x.size(); i++)
+			}*/
+		/*for (int i = 0; i < y.size(); i++)
 		{
-			//std::cout << x[i] << "\n";
-		}
+			std::cout << y[i] << "\n";
+			}*/
 
 		//Calculting the Grid Spacing
-		std::vector<double> del_x(L, 0.0);
-		del_x.push_back(x[1] - x[0]);
-		std::vector<double> del_y(L, 0.0);
-		del_y.push_back(y[1] - y[0]);
-		//std::cout << "del_x = " << del_x[L] << "\t" << "del_y = " << del_y[L] << "\n";
+	        double del_x, del_y;
+		del_x = A.GridSpacingX();
+		del_y = A.GridSpacingY();
 
 		//Calculating the value of Beta
 		std::vector<double> B(L, 0.0);
-		B.push_back((double(pow(del_x[L], 2))) / ((double(1) - double(0.5*0.5))*double(pow(del_y[L], 2))));
+		B.push_back((double(pow(del_x, 2))) / ((double(1) - double(0.5*0.5))*double(pow(del_y, 2))));
 		//std::cout << "Value of B = " << B[L] << "\n";
 
 		//Calculating the Analytical Solution
@@ -73,7 +79,7 @@ int main(int argc, char* argv[])
 			{
 				for (int j = 0; j < 1; j++)
 				{
-					Anew[i][j] = d[L] * (2 * Aold[i][j + 1] + 2 * B[L] * Aold[i + 1][j] - 2 * B[L] * del_y[L] * 0.1*cos(x[0]));
+					Anew[i][j] = d[L] * (2 * Aold[i][j + 1] + 2 * B[L] * Aold[i + 1][j] - 2 * B[L] * del_y * 0.1*cos(x[0]));
 				}
 			}
 
@@ -82,7 +88,7 @@ int main(int argc, char* argv[])
 			{
 				for (int j = 1; j < y.size() - 1; j++)
 				{
-					Anew[i][j] = d[L] * (Aold[i][j + 1] + Anew[i][j - 1] + 2 * B[L] * Aold[i + 1][j] - 2 * B[L] * del_y[L] * 0.1*cos(x[j]));
+					Anew[i][j] = d[L] * (Aold[i][j + 1] + Anew[i][j - 1] + 2 * B[L] * Aold[i + 1][j] - 2 * B[L] * del_y * 0.1*cos(x[j]));
 				}
 			}
 
@@ -91,7 +97,7 @@ int main(int argc, char* argv[])
 			{
 				for (int j = y.size() - 1; j < y.size(); j++)
 				{
-					Anew[i][j] = d[L] * (2 * Anew[i][j - 1] + 2 * B[L] * Aold[i + 1][j] - 2 * B[L] * del_y[L] * 0.1*cos(x[j]));
+					Anew[i][j] = d[L] * (2 * Anew[i][j - 1] + 2 * B[L] * Aold[i + 1][j] - 2 * B[L] * del_y * 0.1*cos(x[j]));
 				}
 			}
 
@@ -230,14 +236,14 @@ int main(int argc, char* argv[])
 		{
 			for (int j = 0; j < y.size(); j++)
 			{
-				u[i][j] = (Asor[i + 1][j] - Asor[i - 1][j]) / (2 * del_x[L]);
+				u[i][j] = (Asor[i + 1][j] - Asor[i - 1][j]) / (2 * del_x);
 			}
 		}
 		for (int i = 0; i < x.size(); i++)
 		{
 			for (int j = 1; j < y.size() - 1; j++)
 			{
-				v[i][j] = (Asor[i][j + 1] - Asor[i][j - 1]) / (2 * del_y[L]);
+				v[i][j] = (Asor[i][j + 1] - Asor[i][j - 1]) / (2 * del_y);
 			}
 		}
 
@@ -248,14 +254,14 @@ int main(int argc, char* argv[])
 		{
 			for (int j = 0; j < y.size(); j++)
 			{
-				u[i][j] = (Asor[i + 1][j] - Asor[i][j]) / (del_x[L]);
+				u[i][j] = (Asor[i + 1][j] - Asor[i][j]) / (del_x);
 			}
 		}
 		for (int i = x.size() - 1; i < x.size(); i++)
 		{
 			for (int j = 0; j < y.size(); j++)
 			{
-				u[i][j] = (Asor[i][j] - Asor[i - 1][j]) / (del_x[L]);
+				u[i][j] = (Asor[i][j] - Asor[i - 1][j]) / (del_x);
 			}
 		}
 
@@ -264,14 +270,14 @@ int main(int argc, char* argv[])
 		{
 			for (int j = 0; j < 1; j++)
 			{
-				v[i][j] = (Asor[i][j + 1] - Asor[i][j]) / (del_y[L]);
+				v[i][j] = (Asor[i][j + 1] - Asor[i][j]) / (del_y);
 			}
 		}
 		for (int i = 0; i < x.size(); i++)
 		{
 			for (int j = y.size() - 1; j < y.size(); j++)
 			{
-				v[i][j] = (Asor[i][j] - Asor[i][j - 1]) / (del_y[L]);
+				v[i][j] = (Asor[i][j] - Asor[i][j - 1]) / (del_y);
 			}
 		}
 
